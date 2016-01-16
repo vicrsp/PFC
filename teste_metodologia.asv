@@ -89,21 +89,21 @@ end
 % end
   
 %% Aprender o dicionario usando o K-SVD
-param.K = 1000;
+param.K = 8;
 param.errorFlag = 0;
 param.L = 10;
 param.numIteration = 5;
 param.displayProgress = 1;
 %param.preserveDCAtom = 1;
-param.InitializationMethod = 'DataElements';
+%param.InitializationMethod = 'DataElements';
 
-%param.InitializationMethod = 'GivenMatrix';
-%param.initialDictionary = wmpdictionary(255);
+param.InitializationMethod = 'GivenMatrix';
+param.initialDictionary = wmpdictionary(255);
 %param.initialDictionary = wmpdictionary(255,'lstcpt',{{'sym4',5},{'sym4',4}...
    % {'sym4',2},{'sym4',3},{'sym4',1}
    % });
 
-%param.K = size(param.initialDictionary,2);
+
 [D_ksvd out] = KSVD(D_inicial,param);
 %[D_ksvd out] = MOD(D_inicial,param);
 
@@ -119,7 +119,7 @@ for i=1:1:32
 
 alfa = OMP(D_ksvd,sinal(1+(i-1)*255 : 255*(i))',1);
 %alfa = SolveBP(D_ksvd,sinal(1+(i-1)*255 : 255*(i))',1000);
-%r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
+r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
 
 X = [X ; D_ksvd*alfa];
 
@@ -127,6 +127,6 @@ X = [X ; D_ksvd*alfa];
 end
 %plot(dados(1:512*10));hold on
 figure;
-plot(sinalLimpo.sinal(1:32*255)); hold on;
+plot(sinal(1:32*255)); hold on;
 plot(X,'r')
 
