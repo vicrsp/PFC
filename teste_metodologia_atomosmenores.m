@@ -7,28 +7,28 @@ sinal3 = load('sinalTeste3.mat');
 sinalIdeal = load('sinalTesteSemRuido.mat');
 
 K = 2000;
-fs = 2e6;
+fs = 4*2e6;
 deltaT = 1/fs;
 
 R0 = 2.7e3;
 L0 = 6.7e-3;
 C0 = 500e-12;
-n = [0:511];
+n = [0:512];
 N = length(n);
 
 % tamanho do atomo
-sz_atom = 512;
+sz_atom = 16;
 
 % D_inicial = [];
-numPulsos = 2^11;
+numPulsos = 2^10;
 % sinalLimpo = [];
 sinalLimpo = zeros(1,numPulsos * 2*length(n));
 
 %% Gerar os sinas de treino
 
-ampDP = 1;             % Amplitude das descargas parciais
+ampDP = 2;             % Amplitude das descargas parciais
 
-for i=1:numPulsos-2
+for i=1:numPulsos
     
     R = R0;
     L = L0;
@@ -59,7 +59,7 @@ for i=1:numPulsos-2
         sinalLimpo(1+(i*2*N):2*N*(i+1)) = [temp1 real(DP) temp2];
 %         sinalLimpo = [sinalLimpo temp1 real(DP) temp2];
     end
-    sinalTreino = sinalLimpo + 0.001 * max(sinalLimpo) * randn(1 ,length(sinalLimpo));
+    sinalTreino = sinalLimpo + 0.0001 * max(sinalLimpo) * randn(1 ,length(sinalLimpo));
 
 end
 %% Obtem os sinais de DP para o treinamento do dicionario
@@ -75,7 +75,7 @@ end
 disp('Started training dictionary');
 
 % param.K = size(D_treino,2);
-param.K = 1024 + 256;
+param.K = 512 - 128;
 param.errorFlag = 0;
 param.L = 5;
 param.numIteration = 5;
@@ -101,13 +101,13 @@ X = [];
 %r = [];
 %sinal_norm = sinal*diag(1./sqrt(sum(sinal.*sinal)));
 %sinal_norm = sinal_norm.*repmat(sign(sinal_norm(1,:)),size(sinal_norm,1),1);
-sinalTeste = sinal3.sinal;
+sinalTeste = sinal1.sinal;
 
 
 for i=1:size(sinalTeste,2)/N
 
 %alfa = OMP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',2);
-X_i = wmpalg('BMP',sinalTeste(1+(i-1)*N : N*(i))',D_treino,'itermax',1);
+X_i = wmpalg('OMP',sinalTeste(1+(i-1)*N : N*(i))',D_treino,'itermax',1);
 %alfa = SolveBP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',length(D_ksvd));
 %r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
 %X = [X ; D_ksvd*alfa];
@@ -125,5 +125,49 @@ figure;
 plot(vetTempos,sinalTeste); hold on;
 plot(vetTempos,X,'r')
 
-% err = mean((X - sinalIdeal.sinal').^2)
-% err2 = mean((X - sinalTeste').^2)
+ err = mean((X - sinalIdeal.sinal').^2)
+ err2 = mean((X - sinalTeste').^2)
+
+ %% Teste com sinais reais de DP
+[FILENAME, PATHNAME, FILTERINDEX] = uigetfile ('*.pdra', 'Escolha o arquivo');
+
+if (~FILENAME)
+    return;
+end
+
+arq = fopen(FILENAME);
+
+dados = fread(arq, inf, 'float32');
+
+
+fclose (arq);
+X = [];
+h = 2^19;
+i = 0;
+X_i = 0;
+
+while ((i * h + 1) < length(dados))
+    dados_atual = dados((i+1) * h + 1 : (i+2) * h);
+    %dados_atual = dados_atual(1:8:end);
+    X = [];
+    for k=1:length(dados_atual)/N
+        %alfa = OMP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',2);
+        X_i = wmpalg('BMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
+        %alfa = SolveBP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',length(D_ksvd));
+        %r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
+        %X = [X ; D_ksvd*alfa];
+        X = [X;X_i];
+    end
+    
+    t = [0:length(X_i)-1] * deltaT;
+    %plot(dados_atual - mean(dados_atual)); hold on;
+    plot(dados_atual); hold on;
+    plot(X ,'r')
+        
+    i = i + 2;
+    input('Digite uma tecla...');close all;
+end
+
+
+
+

@@ -129,6 +129,7 @@ arq = fopen(FILENAME);
 
 dados = fread(arq, inf, 'float32');
 
+
 fclose (arq);
 X = [];
 h = 2^19;
@@ -137,7 +138,7 @@ X_i = 0;
 
 while ((i * h + 1) < length(dados))
     dados_atual = dados((i+1) * h + 1 : (i+2) * h);
-    dados_atual = dados_atual(1:8:end);
+    %dados_atual = dados_atual(1:8:end);
     X = [];
     for k=1:length(dados_atual)/N
         %alfa = OMP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',2);
@@ -149,11 +150,12 @@ while ((i * h + 1) < length(dados))
     end
     
     t = [0:length(X_i)-1] * deltaT;
-    plot(dados_atual - mean(dados_atual)); hold on;
+    %plot(dados_atual - mean(dados_atual)); hold on;
+    plot(dados_atual); hold on;
     plot(X ,'r')
         
     i = i + 2;
-    input('Digite uma tecla...');
+    input('Digite uma tecla...');close all;
 end
 
 
