@@ -7,32 +7,35 @@ sinal3 = load('sinalTeste3.mat');
 sinalIdeal = load('sinalTesteSemRuido.mat');
 
 K = 2000;
-fs = 2*4*2e6;
+fs = 40e6;
 deltaT = 1/fs;
 
 R0 = 2.7e3;
 L0 = 6.7e-3;
 C0 = 500e-12;
-n = [0:512];
+n = [0:1023];
 N = length(n);
 
 % tamanho do atomo
-sz_atom = 16;
+sz_atom = 256;
 
 % D_inicial = [];
-numPulsos = 2^10;
+numPulsos = 2^11;
 % sinalLimpo = [];
 sinalLimpo = zeros(1,numPulsos * 2*length(n));
 
-%% Gerar os sinas de treino
-
+D_treino = [];
 ampDP = 2;             % Amplitude das descargas parciais
 
+%% Gerar os sinas de treino
+
+
 for i=1:numPulsos
-    
+    DP = [];
     R = R0;
     L = L0;
     C = C0;
+    
     if(i>1)
         R = R0*(1 + randn);
         L = L0*(1 + randn);
@@ -44,6 +47,8 @@ for i=1:numPulsos
         alpha = 1/(2*R*C);
         omega0 = 1/sqrt(L*C);
 
+        zeta = alpha/omega0;
+        
         s1 = -alpha + sqrt(alpha^2 - omega0^2);     % Raizes da equacao caracteristica
         s2 = -alpha - sqrt(alpha^2 - omega0^2);
 
@@ -53,43 +58,67 @@ for i=1:numPulsos
 
         nzeros = ceil(N*rand);
        
-        DP =  (1 + 2*(rand()- 0.5)*25/100)* ampDP * (A1 * exp(s1 * n/fs) + A2 * exp(s2 * n/fs));
-        temp1 = zeros(1, floor(N * rand()));  %Ajuste para garantir ausï¿½ncia de sobreposiï¿½ï¿½o
-        temp2 = zeros(1, N-length(temp1));    %Idem
-        sinalLimpo(1+(i*2*N):2*N*(i+1)) = [temp1 real(DP) temp2];
+        %DP = (1 + 2*(rand()- 0.5)*10/100)* ampDP * (A1 * exp(s1 * n/fs) + A2 * exp(s2 * n/fs));
+
+       % DP = 10*ampDP*(exp(-alfa*n/fs) - exp(-beta*n/fs));
+        
+        if(zeta < 1)
+          DP = ampDP*(exp(-alpha * n/fs).*sin(omega0*sqrt(1 - zeta^2)*n/fs));
+        else if (zeta > 1)
+              alfa = real(alpha);
+              beta = (1 + rand())*alfa;
+              DP = 10*ampDP*(exp(-alfa*n/fs) - exp(-beta*n/fs));  
+            end
+        end
+        
+             
+        %DP = real(DP) ;
+        % Pequeno ruido para evitar zeros        
+        %DP = ampDP*(exp(s1*n/fs) - exp(s2 * n/fs));
+        DP = DP + 0.0001 * max(DP) * randn(1 ,length(DP));
+        
+%         plot(DP);
+%         pause;
+        
+        
+        for k=1:length(DP)/sz_atom
+             D_treino = [D_treino  DP(1,sz_atom*(k-1)+1:(sz_atom*k))'];
+        end
+        
+%         plot(real(DP));
+%         pause;
+        %temp1 = zeros(1, floor(N * rand()));  %Ajuste para garantir ausï¿½ncia de sobreposiï¿½ï¿½o
+        %temp2 = zeros(1, N-length(temp1));    %Idem
+        %sinalLimpo(1+(i*2*N):2*N*(i+1)) = [temp1 real(DP) temp2];
 %         sinalLimpo = [sinalLimpo temp1 real(DP) temp2];
     end
-    sinalTreino = sinalLimpo + 0.0001 * max(sinalLimpo) * randn(1 ,length(sinalLimpo));
+    %sinalTreino = sinalLimpo + 0.0001 * max(sinalLimpo) * randn(1 ,length(sinalLimpo));
 
 end
-%% Obtem os sinais de DP para o treinamento do dicionario
-D_treino = [];
-
-N = sz_atom;
-for i=1:size(sinalTreino,2)/N
-    D_treino = [D_treino  sinalTreino(1,N*(i-1)+1:(N*i))'];
-end
-
 
 %% Treinar o dicionário
 disp('Started training dictionary');
 
 % param.K = size(D_treino,2);
-param.K = 512 - 128;
+%param.K = 1024;
 param.errorFlag = 0;
 param.L = 5;
-param.numIteration = 5;
+param.numIteration = 10;
 param.displayProgress = 1;
 param.preserveDCAtom = 0;
-param.InitializationMethod = 'DataElements';
+%param.InitializationMethod = 'DataElements';
 
-% param.InitializationMethod = 'GivenMatrix';
-% param.initialDictionary = wmpdictionary(256);
-% param.initialDictionary = wmpdictionary(256,'lstcpt',{{'sym4',5},{'db4',4}...
-%     {'db4',3},{'db4',2},{'db4',1},{'sym4',4},{'sym4',3}
-%     });
-% 
-% param.K = size(param.initialDictionary,2);
+param.InitializationMethod = 'GivenMatrix';
+%param.initialDictionary = wmpdictionary(sz_atom);
+param.initialDictionary = wmpdictionary(sz_atom,'lstcpt',{{'db4',4}...
+    {'db4',3},{'db4',2},{'db4',1},...
+    {'db6',1},{'db6',2},{'db6',3}...
+%     {'db2',1},{'db2',2},{'db2',3},...
+%     {'sym1',1},...
+%     {'sym2',1}...
+    });
+
+param.K = size(param.initialDictionary,2);
 
 [D_ksvd out] = KSVD(D_treino,param);
 %[D_ksvd out] = MOD(D_inicial,param);
@@ -102,7 +131,7 @@ X = [];
 %sinal_norm = sinal*diag(1./sqrt(sum(sinal.*sinal)));
 %sinal_norm = sinal_norm.*repmat(sign(sinal_norm(1,:)),size(sinal_norm,1),1);
 sinalTeste = sinal1.sinal;
-
+N = sz_atom;
 
 for i=1:size(sinalTeste,2)/N
 
@@ -139,7 +168,7 @@ arq = fopen(FILENAME);
 
 dados = fread(arq, inf, 'float32');
 
-
+N = sz_atom;
 fclose (arq);
 X = [];
 h = 2^19;
@@ -152,7 +181,7 @@ while ((i * h + 1) < length(dados))
     X = [];
     for k=1:length(dados_atual)/N
         %alfa = OMP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',2);
-        X_i = wmpalg('BMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
+        X_i = wmpalg('OMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
         %alfa = SolveBP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',length(D_ksvd));
         %r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
         %X = [X ; D_ksvd*alfa];
