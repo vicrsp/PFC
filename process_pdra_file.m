@@ -17,12 +17,14 @@ counter = 1;
 
 while ((i * h + 1) < length(dados))
     dados_atual = dados((i+1) * h + 1 : (i+2) * h);
+%     X = [];
+%     for k=1:length(dados_atual)/N
+%         X_i = wmpalg('OMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
+%         X = [X;X_i];
+%     end
 
-    X = [];
-    for k=1:length(dados_atual)/N
-        X_i = wmpalg('OMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
-        X = [X;X_i];
-    end
+    step_sz = 8;
+    X = sparse_denoising(D_ksvd,dados_atual,step_sz);
     saveFile = strcat(file.name,sprintf('_part%d.mat',counter));
 
     save(saveFile,'X','dados_atual');

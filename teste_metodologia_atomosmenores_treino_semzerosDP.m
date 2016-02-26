@@ -168,7 +168,7 @@ arq = fopen(FILENAME);
 
 dados = fread(arq, inf, 'float32');
 
-N = sz_atom;
+N = size(D_ksvd,1);
 fclose (arq);
 X = [];
 h = 2^19;
@@ -179,19 +179,23 @@ while ((i * h + 1) < length(dados))
     dados_atual = dados((i+1) * h + 1 : (i+2) * h);
     %dados_atual = dados_atual(1:8:end);
     X = [];
+%     Xj = [];
     for k=1:length(dados_atual)/N
         %alfa = OMP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',2);
         X_i = wmpalg('OMP',dados_atual(1+(k -1)*N : N*(k))',D_ksvd,'itermax',1);
+%         X_j = sparse_denoising(D_ksvd,dados_atual(1+(k -1)*N : N*(k))',8);
         %alfa = SolveBP(D_ksvd,sinalTeste(1+(i-1)*N : N*(i))',length(D_ksvd));
         %r = [r corr2(D_ksvd , repmat((D_ksvd*alfa),1,1000))];
         %X = [X ; D_ksvd*alfa];
+%         Xj = [Xj X_j];
         X = [X;X_i];
     end
     
     t = [0:length(X_i)-1] * deltaT;
     %plot(dados_atual - mean(dados_atual)); hold on;
     plot(dados_atual); hold on;
-    plot(X ,'r')
+    plot(X ,'r'); hold on;
+%     plot(Xj,'g')
         
     i = i + 2;
     input('Digite uma tecla...');close all;

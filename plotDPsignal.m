@@ -1,6 +1,6 @@
 function plotDPsignal(measured, processed,text)
     
-    close all;
+   % close all;
     fs = 20e6;%Hz
     
     deltaT = 1/fs;

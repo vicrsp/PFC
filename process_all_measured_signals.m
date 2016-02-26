@@ -3,7 +3,7 @@ close all; clear all;clc;
 % Construct a questdlg with three options
 choice = questdlg('Would you like to load a dicitionary?', ...
     'Sparse Denoising', ...
-    'No','Yes','Cancel','Cancel');
+    'Yes','No','Cancel','Cancel');
 % Handle response
 switch choice
     case 'Yes'
@@ -16,12 +16,12 @@ switch choice
             load(FILENAME);
         end
         
-        disp('Discionary succesfully loaded!')
+        disp('Dictionary succesfully loaded!')
     case 'No'
         % Build the initial dictionary
         
         paramsI.numPulsos = 2^10;
-        paramsI.sz_atom = 128;
+        paramsI.sz_atom = 64;
         paramsI.fs = 40e6; %Hz
         paramsI.Nsamples = 1024; % 1024 samples
         paramsI.ampDP = 2;
@@ -45,7 +45,7 @@ switch choice
        
 end
 %% iterate thorugh all files and save the sparse denoise result in files
-cd('C:\Users\Victor\Desktop\UFMG\PFC\BaseDeDados\Medidos')
+cd('C:\Users\Victor\Desktop\UFMG\PFC\BaseDeDados\Medidos\Processar')
 files = dir('*.pdra');
 
 outDir = 'C:\Users\Victor\Documents\PFC\Sinais Processados';
@@ -63,5 +63,16 @@ for file = files'
 end
 
 % Save the dictionary, for future reference
-save('Dicitionay','D_ksvd');
-disp('Dictionary saved');
+save('Dictionary','D_ksvd');
+disp('Dictionary saved!');
+
+%% plot results
+[FILENAME, PATHNAME, FILTERINDEX] = uigetfile ('*.mat', 'Escolha o arquivo');
+
+if (~FILENAME)
+    return;
+end
+
+load(FILENAME)
+
+plotDPsignal(dados_atual,X);
