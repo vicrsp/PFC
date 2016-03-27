@@ -11,7 +11,7 @@ start_idx = 1;
 end_idx = sz_atom;
 iter = 1;
 
-h1 = waitbar(0,'Processing signal sparse coding. Please wait...');
+h1 = waitbar(0,'Sparse coding in progress...');
 setappdata(h1,'canceling',0)
 
 while end_idx <= N
@@ -33,9 +33,9 @@ while end_idx <= N
 end
 delete(h1);
 
-disp('Finished sparse decompostion.');
+disp('Finished sparse coding.');
 
-h = waitbar(0,'Processing signal blocks. Please wait...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+h = waitbar(0,'Processing blocks. Please wait...','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 setappdata(h,'canceling',0)
 
 
@@ -61,6 +61,6 @@ end
 toc
 
 delete(h);
-% plotDPsignal(signal,p_signal);
+plotDPsignal(signal,p_signal);
 
 end

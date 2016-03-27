@@ -56,8 +56,6 @@ newDir = sprintf('%d-%d-%d_%d-%d-%d',fix(clock));
 mkdir(newDir);
 cd(newDir);
 
-numAtoms = 1;
-
 for file = files'
     process_pdra_file(D_ksvd,file);
 end
@@ -67,12 +65,15 @@ save('Dictionary','D_ksvd');
 disp('Dictionary saved!');
 
 %% plot results
+clear all;clc;
 [FILENAME, PATHNAME, FILTERINDEX] = uigetfile ('*.mat', 'Escolha o arquivo');
 
 if (~FILENAME)
     return;
 end
 
+cd(PATHNAME);
 load(FILENAME)
 
-plotDPsignal(dados_atual,X);
+%plotDPsignal(dados_atual,X);
+
