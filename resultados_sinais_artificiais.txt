@@ -1,0 +1,19 @@
+Ruido gaussiano
+	snr_final: -2.5014
+	snr_inicial: -10.7675
+	rxy_final: 0.1065
+	rxy_inicial: 0.0261
+
+-------------------------//-------------------------
+Ruido harmonico
+	snr_final: -2.7468
+	snr_inicial: -10.2473
+	rxy_final: 0.0032
+	rxy_inicial: 6.3367e-04
+
+-------------------------//--------------------------
+Ruido pulsante
+	snr_final: 3.6612
+	snr_inicial: -1.7622
+	rxy_final: 0.7564
+	rxy_inicial: 0.0322	
