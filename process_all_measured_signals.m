@@ -20,10 +20,10 @@ switch choice
     case 'No'
         % Build the initial dictionary
         
-        paramsI.numPulsos = 2^10;
-        paramsI.sz_atom = 64;
+        paramsI.numPulsos = 2^13;
+        paramsI.sz_atom = 1024;
         paramsI.fs = 40e6; %Hz
-        paramsI.Nsamples = 1024; % 1024 samples
+        paramsI.Nsamples = 4*1024; % 1024 samples
         paramsI.ampDP = 2;
         
         D_treino = build_training_dictionary(paramsI);
@@ -32,7 +32,7 @@ switch choice
         
         paramsT.errorFlag = 0;
         paramsT.L = 5;
-        paramsT.numIteration = 10;
+        paramsT.numIteration = 1;
         paramsT.displayProgress = 1;
         paramsT.preserveDCAtom = 0;
         paramsT.InitializationMethod = 'GivenMatrix';

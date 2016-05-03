@@ -10,7 +10,8 @@ else
     params.initialDictionary = D_treino;
 end
 
-params.K = size(params.initialDictionary,2);
+%params.K = size(params.initialDictionary,2);
+params.K = 2048;
 
 % Train the dictionary using K-SVD algorithm
 disp('Started training dictionary');
